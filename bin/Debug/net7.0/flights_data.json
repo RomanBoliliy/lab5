@@ -1,0 +1,26 @@
+[
+  {
+    "FlightNumber": "1",
+    "Airline": "2",
+    "Destination": "1",
+    "DepartureTime": "0002-01-01T00:00:00",
+    "ArrivalTime": "0001-01-01T00:00:00",
+    "Gate": "1",
+    "Status": 4,
+    "Duration": "365.00:00:00",
+    "AircraftType": "1",
+    "Terminal": "1"
+  },
+  {
+    "FlightNumber": "1",
+    "Airline": "1",
+    "Destination": "1",
+    "DepartureTime": "0001-01-01T00:00:00",
+    "ArrivalTime": "0002-01-01T00:00:00",
+    "Gate": "1",
+    "Status": 2,
+    "Duration": "-365.00:00:00",
+    "AircraftType": "1",
+    "Terminal": "1"
+  }
+]
