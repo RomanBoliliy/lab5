@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace lab_5
 {
-    internal class FlightSearch
+    internal class FlightSearch //Додатковий клас для реалізації пошуку
     {
 
         private string FlightNumber;
@@ -19,7 +19,7 @@ namespace lab_5
         private string AircraftType;
         private string Terminal;
 
-  
+        //Конструктори для пошуку по даним, які в них вводяться
         public FlightSearch(string Airline) { this.Airline = Airline; }
   
         public FlightSearch(FlightStatus Status) { this.Status = Status; }
@@ -41,25 +41,26 @@ namespace lab_5
             TimeSpan  Duration = end - start; this.Duration = Duration;
         }
 
+        //Методи для пошуку
         public bool FindAirline(Flight f)
         { 
-            return f.Airline.Equals(Airline);
+            return f.airline.Equals(Airline);
         }
         public bool FindStatus(Flight f)
         {
-            return f.Status.Equals(Status);
+            return f.status.Equals(Status);
         }
         public bool FindDeparture(Flight f)
         {
-            return f.DepartureTime.Equals(DepartureTime);
+            return f.departureTime.Equals(DepartureTime);
         }
         public bool FindTimeDestiantion(Flight f)
         {
-            return f.DepartureTime.Equals(DepartureTime) && f.ArrivalTime.Equals(ArrivalTime) && f.Destination.Equals(Destination);
+            return f.departureTime.Equals(DepartureTime) && f.arrivalTime.Equals(ArrivalTime) && f.destination.Equals(Destination);
         }
         public bool FindTime(Flight f)
         {
-            return f.Duration.Equals(Duration);
+            return f.duration.Equals(Duration);
         }
 
 

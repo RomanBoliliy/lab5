@@ -1,232 +1,203 @@
 ﻿using System;
+using System.Text.Json;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Text.Json;
-using System.Threading.Tasks;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Schema;
 
 namespace lab_5
 {
-   
+
     internal class FlightInformationSystem
     {
-        List<Flight> Fly = new List<Flight>();
-        string path = @"C:\Users\Роман\Desktop\lab5\lab_5\bin\Debug\net7.0\flights_data.json";
+        List<Flight> flights = new List<Flight>();
 
-        //public void open() { Process.Start(new ProcessStartInfo(path) { UseShellExecute = true }); }\
+        string path = @"C:\Users\Роман\Desktop\lab5\lab_5\bin\Debug\net7.0\flights_data.json"; //Шлях до файлу
 
-
-        public  void deserialize() {
-
-            using (FileStream f = new FileStream(path, FileMode.OpenOrCreate))
-            {
-
-                
-                var flights = JsonSerializer.DeserializeAsync<List<Flight>>(f);
-               // Console.WriteLine($"Airline: {flights.Result.Last().Airline} Time: {flights.Result.Last().DepartureTime}");
-               // Fly.Add(flights.Result.Last());
-                Fly = flights.Result;
-                
-            };
-           
-
+        public class FlightData //гет сет для списку
+        {
+            public List<Flight> Flights { get; set; }
         }
 
-        public async void serialize()
+        public void Deserialize() // Метод для десереалізації
         {
-            using (FileStream f = new FileStream(path, FileMode.Create ))
+            try
             {
-
-
-                //List<Flight> NewFly = new List<Flight>(FlightNumber, Airline, Destination, DepartureTime, ArrivalTime, Gate, Status, Duration, AircraftType, Terminal);
-                //Fly.Add(NewFly);
-                await JsonSerializer.SerializeAsync<List<Flight>>(f, Fly);
+                string jsonData = File.ReadAllText(path);
+                var flightsData = JsonConvert.DeserializeObject<FlightData>(jsonData);
+                flights = flightsData.Flights;
             }
-            //return Fly;
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error while dowloading Data: {ex.Message}");
+            }
+
         }
 
-        public int Add()
+        public void Serialize()// Метод для сереалізації
         {
-            Console.WriteLine("Add()");
-            Flight NewFly = new Flight();
-            Fly.Add(NewFly);
-     
-            return Fly.Count();
+
+            var flightsData = new FlightData { Flights = flights };
+            JsonConvert.SerializeObject(flightsData, Formatting.Indented);
+            File.WriteAllText(path, JsonConvert.SerializeObject(flightsData, Formatting.Indented));
         }
+        //Метод для додавання
         public int Add(string FlightNumber, string Airline, string Destination, DateTime DepartureTime, DateTime ArrivalTime, string Gate, FlightStatus Status, TimeSpan Duration, string AircraftType, string Terminal)
         {
             Console.WriteLine("Add(...)");
             Flight NewFly = new Flight(FlightNumber, Airline, Destination, DepartureTime, ArrivalTime, Gate, Status, Duration, AircraftType, Terminal);
-            Fly.Add(NewFly);
-   
-            return Fly.Count();
-        }
+            flights.Add(NewFly);
 
-        public int Delete()
-        {
-            Console.WriteLine("Delete()");
-            Flight NewFly = new Flight();
-            Fly.Remove(NewFly);
-            NewFly.Print();
-            return Fly.Count(); 
+            return flights.Count();
         }
+        //Метод для видалення
         public int Delete(string FlightNumber, string Airline, string Destination, DateTime DepartureTime, DateTime ArrivalTime, string Gate, FlightStatus Status, TimeSpan Duration, string AircraftType, string Terminal)
         {
             Console.WriteLine("Delete(...)");
             Flight NewFly = new Flight(FlightNumber, Airline, Destination, DepartureTime, ArrivalTime, Gate, Status, Duration, AircraftType, Terminal);
-            Fly.Remove(NewFly);
+            flights.Remove(NewFly);
             NewFly.Print();
-            return Fly.Count(); 
+            return flights.Count();
         }
-
-        public List<Flight> Search()
+        //Методи для пошуку за різними полями, які вказані в шапці функції
+        public List<Flight> Search() 
         {
-            List<Flight> FlySearch = new List<Flight>();
 
             var fl = new FlightSearch();
-            
-            FlySearch = Fly.FindAll(fl.FindTime);
 
-            Print(FlySearch);
+            flights = flights.FindAll(fl.FindTime);
 
-            Fly.Sort(delegate (Flight x, Flight y)
+            flights.Sort(delegate (Flight x, Flight y)
             {
-                if (x.ArrivalTime == null && y.ArrivalTime == null) return 0;
-                else if (x.ArrivalTime == null) return -1;
-                else if (y.ArrivalTime == null) return 1;
-                else return x.ArrivalTime.CompareTo(y.ArrivalTime);
+                if (x.arrivalTime == null && y.arrivalTime == null) return 0;
+                else if (x.arrivalTime == null) return -1;
+                else if (y.arrivalTime == null) return 1;
+                else return x.arrivalTime.CompareTo(y.arrivalTime);
             });
+        
+            return flights;
 
-            return FlySearch;
-
-        }
-        public List<Flight> Search(string Airline) 
+        } 
+        public List<Flight> Search(string Airline)
         {
-            List<Flight> FlySearch = new List<Flight>();
-
+       
             var fl = new FlightSearch(Airline);
 
-            FlySearch = Fly.FindAll(fl.FindAirline);
+            flights = flights.FindAll(fl.FindAirline);
 
-            Fly.Sort(delegate (Flight x, Flight y)
+            flights.Sort(delegate (Flight x, Flight y)
             {
-                if (x.DepartureTime == null && y.DepartureTime == null) return 0;
-                else if (x.DepartureTime == null) return -1;
-                else if (y.DepartureTime == null) return 1;
-                else return x.DepartureTime.CompareTo(y.DepartureTime);
+                if (x.departureTime == null && y.departureTime == null) return 0;
+                else if (x.departureTime == null) return -1;
+                else if (y.departureTime == null) return 1;
+                else return x.departureTime.CompareTo(y.departureTime);
             });
 
-            return FlySearch;
+            return flights;
 
         }
 
         public List<Flight> Search(FlightStatus Status)
         {
-            List<Flight> FlySearch = new List<Flight>();
 
             var fl = new FlightSearch(Status);
 
-            FlySearch = Fly.FindAll(fl.FindStatus);
+            flights = flights.FindAll(fl.FindStatus);
 
-            Fly.Sort(delegate (Flight x, Flight y)
+            flights.Sort(delegate (Flight x, Flight y)
             {
-                if (x.ArrivalTime == null && y.ArrivalTime == null) return 0;
-                else if (x.ArrivalTime == null) return -1;
-                else if (y.ArrivalTime == null) return 1;
-                else return x.ArrivalTime.CompareTo(y.ArrivalTime);
+                if (x.arrivalTime == null && y.arrivalTime == null) return 0;
+                else if (x.arrivalTime == null) return -1;
+                else if (y.arrivalTime == null) return 1;
+                else return x.arrivalTime.CompareTo(y.arrivalTime);
             });
 
-            return FlySearch;
+            return flights;
 
         }
 
         public List<Flight> Search(DateTime DepartureTime)
         {
-            List<Flight> FlySearch = new List<Flight>();
 
             var fl = new FlightSearch(DepartureTime);
 
-            FlySearch = Fly.FindAll(fl.FindDeparture);
+            flights = flights.FindAll(fl.FindDeparture);
 
-            Fly.Sort(delegate (Flight x, Flight y)
+            flights.Sort(delegate (Flight x, Flight y)
             {
-                if (x.DepartureTime == null && y.DepartureTime == null) return 0;
-                else if (x.DepartureTime == null) return -1;
-                else if (y.DepartureTime == null) return 1;
-                else return x.DepartureTime.CompareTo(y.DepartureTime);
+                if (x.departureTime == null && y.departureTime == null) return 0;
+                else if (x.departureTime == null) return -1;
+                else if (y.departureTime == null) return 1;
+                else return x.departureTime.CompareTo(y.departureTime);
             });
 
-            return FlySearch;
-
+            return flights;
         }
 
         public List<Flight> Search(DateTime DepartureTime, DateTime ArrivalTime, string Destination)
         {
-            List<Flight> FlySearch = new List<Flight>();
 
-            var fl = new FlightSearch(DepartureTime,ArrivalTime,Destination);
+            var fl = new FlightSearch(DepartureTime, ArrivalTime, Destination);
 
-            FlySearch = Fly.FindAll(fl.FindTimeDestiantion);
+            flights = flights.FindAll(fl.FindTimeDestiantion);
 
-            Fly.Sort(delegate (Flight x, Flight y)
+            flights.Sort(delegate (Flight x, Flight y)
             {
-                if (x.DepartureTime == null && y.DepartureTime == null) return 0;
-                else if (x.DepartureTime == null) return -1;
-                else if (y.DepartureTime == null) return 1;
-                else return x.DepartureTime.CompareTo(y.DepartureTime);
+                if (x.departureTime == null && y.departureTime == null) return 0;
+                else if (x.departureTime == null) return -1;
+                else if (y.departureTime == null) return 1;
+                else return x.departureTime.CompareTo(y.departureTime);
             });
 
-            return FlySearch;
+            return flights;
 
         }
 
         public List<Flight> Search(DateTime StartTime, DateTime EndTime)
         {
-            List<Flight> FlySearch = new List<Flight>();
+            var fl = new FlightSearch(StartTime, EndTime);
 
-            var fl = new FlightSearch(StartTime,EndTime);
+            flights = flights.FindAll(fl.FindTime);
 
-            FlySearch = Fly.FindAll(fl.FindTime);
-
-            Fly.Sort(delegate (Flight x, Flight y)
+            flights.Sort(delegate (Flight x, Flight y)
             {
-                if (x.ArrivalTime == null && y.ArrivalTime == null) return 0;
-                else if (x.ArrivalTime == null) return -1;
-                else if (y.ArrivalTime == null) return 1;
-                else return x.ArrivalTime.CompareTo(y.ArrivalTime);
+                if (x.arrivalTime == null && y.arrivalTime == null) return 0;
+                else if (x.arrivalTime == null) return -1;
+                else if (y.arrivalTime == null) return 1;
+                else return x.arrivalTime.CompareTo(y.arrivalTime);
             });
 
-            return FlySearch;
+            return flights;
         }
 
-        public List<Flight> Sort() 
+        public List<Flight> Sort() // Сортування
         {
             Console.WriteLine("Before");
-            Print(Fly);
-         
+            Print(flights);
+
             Console.WriteLine("After");
 
-            Fly.Sort(delegate (Flight x, Flight y)
+            flights.Sort(delegate (Flight x, Flight y)
             {
-                if (x.DepartureTime == null && y.DepartureTime == null) return 0;
-                else if (x.DepartureTime == null) return -1;
-                else if (y.DepartureTime == null) return 1;
-                else return x.DepartureTime.CompareTo(y.DepartureTime);
+                if (x.departureTime == null && y.departureTime == null) return 0;
+                else if (x.departureTime == null) return -1;
+                else if (y.departureTime == null) return 1;
+                else return x.departureTime.CompareTo(y.departureTime);
             });
 
-            Print(Fly);
-            return Fly;
-        }
-        public int GetCount() { return Fly.Count(); }
-        public void Print(List<Flight> Fly ) { 
-        foreach (var fl in Fly) { fl.Print(); }
-        }
-        public void Print()
+            Print(flights);
+            return flights;
+        } 
+        public int GetCount() { return flights.Count(); } //Кількість рядків
+        public void Print(List<Flight> Fly)//Вивід результатів
         {
             foreach (var fl in Fly) { fl.Print(); }
         }
-
+        public void Print() //Вивід результатів
+        {
+            foreach (var fl in flights) { fl.Print(); }
+        } 
     }
 }
